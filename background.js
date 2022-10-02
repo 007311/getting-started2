@@ -1,8 +1,8 @@
 const menuItems = {
   'addVoca': 'Add vocabulary', 
   'markUp': 'Mark vocabulary', 
-  'addNotes': 'Add to notes', 
-  'getNotes': 'Get Notes'
+  'addNotes': 'Add to notes'//, 
+  //'getNotes': 'Get Notes'
 };
 const headers1 = {'Authorization': 'Bearer 9888df89-1114-48f8-8aed-c746f19e6705'};
 const headers2 = {
@@ -12,7 +12,6 @@ const headers2 = {
 let loginId = 'no one';
 let docID = ''; //'QTO9K4F8M7';
 let tabID = ''; //'grid-dn7gNBAjZl';
-let buttID = 'c-z__kkTUyD-';
 let vocaName = '';
 let uri = ''; //`https://coda.io/apis/v1/docs/${docID}/tables/${tabID}/rows`;
 
@@ -20,7 +19,6 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
     (key === 'docId') && (docID = newValue);
     (key === 'tabId') && (tabID = newValue);
-    //(key === 'uri') && (uri = newValue);
     uri = `https://coda.io/apis/v1/docs/${docID}/tables/${tabID}/rows`;
     console.log(
       `Storage key "${key}" in "${namespace}" changed.`,

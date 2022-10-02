@@ -4,33 +4,19 @@ const headers1 = {'Authorization': 'Bearer 9888df89-1114-48f8-8aed-c746f19e6705'
 const whoAmI   = document.getElementById("whoAmI");
 const addNote  = document.getElementById("addNote");
 const logId    = document.getElementById("logId");
-
-chrome.storage.local.get("loginId", ({ loginId }) => {
-  logId.innerText = loginId;
-});
-
+//chrome.storage.local.get("loginId", ({ loginId }) => {logId.innerText = loginId;});
 async function listCoda(uri) {
   let data = await fetch(uri, headers1)
-    .then(response => {
-      return response.json();
-    });
+    .then(response => {return response.json();});
   return data;
 }
 
 whoAmI.addEventListener("click", async () => {
-  let who = await listCoda('https://coda.io/apis/v1/whoami');
-  if (who.loginId) {
-    loginId = who.loginId;
-    chrome.storage.local.set({ loginId });
-    logId.innerText = loginId;
-    var codaDocuments = await listDocs();
+  if (getUserName()) {
+    let codaDocuments = await listDocs();
     chrome.storage.local.set({codaDocuments});
     putDoclist(codaDocuments);
-    if (docList.value) {
-      listTables(docList.value);
-    } else {
-      tabList.value = '';
-    }
+    (docList.value) ? listTables(docList.value) : (tabList.selectedIndex = "0");
 
   } else {
     createNotification('Coda', 'login to Coda !');
@@ -40,9 +26,8 @@ whoAmI.addEventListener("click", async () => {
 async function getUserName() {
   let who = await listCoda('https://coda.io/apis/v1/whoami');
   if (who.loginId) {
-    let loginId = who.loginId;
-    chrome.storage.local.set({ loginId });
-    logId.innerText = loginId;
+    chrome.storage.local.set({loginId: who.loginId});
+    logId.innerText = who.loginId;
     return true;
   } else {    
     return false;
@@ -67,7 +52,6 @@ async function listDocs() {
 
 function putDoclist(codaDocuments) {
   while (docList.options.length > 1) docList.remove(0);
-  //createNotification('docids', (JSON.stringify(docids)));
   for (let [docid, docname] of Object.entries(codaDocuments)) {
     var x = document.createElement("OPTION");
     x.setAttribute("value", docid);
@@ -141,13 +125,10 @@ document.body.onload = async function() {
 
 docList.onchange = function() {
   //let docId = docList.options[docList.selectedIndex].value; 
-  let docId = docList.value;
-  chrome.storage.local.set({docId});
-  listTables(docId);
+  chrome.storage.local.set({docId: docList.value});
+  listTables(docList.value);
 };
 tabList.onchange = function() {
   //let tabId = tabList.options[tabList.selectedIndex].value; 
-  //chrome.storage.local.set({tabId: ''});
-  let tabId = tabList.value;
-  chrome.storage.local.set({tabId});
+  chrome.storage.local.set({tabId: tabList.value});
 };
