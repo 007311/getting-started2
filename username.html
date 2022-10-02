@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <script>
+    async function getUserName() {                
+            let lab = await fetch('https://coda.io/apis/v1/whoami', {headers: {'Authorization': 'Bearer 9888df89-1114-48f8-8aed-c746f19e6705'}})
+                 .then(function(response) {
+                    return response.json(); 
+                 })
+                 .then(function(myJson) {
+                   return myJson;
+                 });
+            document.getElementById("lable").innerText = lab.loginId;
+    }
+    async function addVocabulary() {
+      let docID = 'QTO9K4F8M7';
+      let tableID = 'grid-dn7gNBAjZl';
+      let name = 'Name';
+      let butn = 'Button';
+  
+      uri = `https://coda.io/apis/v1/docs/${docID}/tables/${tableID}/rows`;
+      const opt = {method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer 9888df89-1114-48f8-8aed-c746f19e6705'}, body: {"rows": [{"cells": [{"column": "Name", "value": "liquid2"},],},],}};
+      //const payload = {'rows': [{'cells': [{'column': 'Name', 'value': 'liquid'},],},],};
+      fetch(uri, opt)
+        .then((response) => response.json())
+        .then((data) => console.log(data));
+    }
+    </script>
+</head>
+<body>
+    <p id="lable">debugger</p>
+    <p>liquid</p>  
+    <p>
+    <button onclick="getUserName()">Click me to </button>
+    <p>
+    <button onclick="addVocabulary()">Click to add a word.</button>
+</body>
+</html>    

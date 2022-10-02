@@ -1,0 +1,39 @@
+{
+  "name": "Coda Extension",
+  "description": "Build an Coda Extension!",
+  "version": "0.99",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "scripting",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://coda.io/*"
+  ],
+  "content_security_policy": {
+    "extension_page":"script-src 'self' 'unsafe-eval'; object-src 'self'"
+ },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "/images/coda16.png",
+      "32": "/images/coda32.png",
+      "48": "/images/coda48.png",
+      "128": "/images/coda128.png"
+    }
+  },
+  "icons": {
+    "16": "/images/coda16.png",
+    "32": "/images/coda32.png",
+    "48": "/images/coda48.png",
+    "128": "/images/coda128.png"
+  },
+  "options_page": "options.html"
+}
