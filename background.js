@@ -1,8 +1,8 @@
 const menuItems = {
   'addVoca': 'Add vocabulary', 
   'markUp': 'Mark vocabulary', 
-  'addNotes': 'Add to notes'//, 
-  //'getNotes': 'Get Notes'
+  'addNotes': 'Add to notes', 
+  'getNote': 'Get Note'
 };
 const headers1 = {'Authorization': 'Bearer 9888df89-1114-48f8-8aed-c746f19e6705'};
 const headers2 = {
@@ -10,26 +10,36 @@ const headers2 = {
   'Authorization': 'Bearer 9888df89-1114-48f8-8aed-c746f19e6705'
 };
 let loginId = 'no one';
-let docID = ''; //'QTO9K4F8M7';
-let tabID = ''; //'grid-dn7gNBAjZl';
+let docID = chrome.storage.local.get('docId', ({docId}) => {docID = docId});
+let tabID = chrome.storage.local.get('tabId', ({tabId}) => {tabID = tabId});
+let notesID = chrome.storage.local.get('notesId', ({notesId}) => {notesID = notesId});
 let vocaName = '';
+
 let uri = ''; //`https://coda.io/apis/v1/docs/${docID}/tables/${tabID}/rows`;
 
+async function getNotesId() {
+  url = `https://coda.io/apis/v1/docs/${docID}/tables/${tabID}/columns/Notes`;
+  await fetch(url, headers1)
+    .then((response) => {return response.json();})
+    .then((result) => {notesID = result.id;})
+    .then(chrome.storage.local.set({notesId: notesID}));
+  return true;
+}
 chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
     (key === 'docId') && (docID = newValue);
-    (key === 'tabId') && (tabID = newValue);
-    uri = `https://coda.io/apis/v1/docs/${docID}/tables/${tabID}/rows`;
+    (key === 'tabId') && ((tabID = newValue) && getNotesId());
+    (key === 'isNotifying') && (createNotification('isNotifying', newValue.toString()));
     console.log(
-      `Storage key "${key}" in "${namespace}" changed.`,
-      `Old value: "${oldValue}", new value: "${newValue}".`,
-      `uri is ${uri}`
+      `Storage key "${key}" is changed.`, 
+      `OldValue: "${oldValue}", newValue: "${newValue}".`//,
+      //`uri is ${uri}`
     );
   }
 });
 
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-  await fetch(uri+`/${alarm.name}/buttons/Button`, {method: 'POST', headers: headers1})
+chrome.alarms.onAlarm.addListener((alarm) => {
+  fetch(uri+`/${alarm.name}/buttons/Button`, {method: 'POST', headers: headers1})
   .then((response) => {
     if (response.status == '404') createAlarm(alarm.name, 5000);
   });
@@ -52,17 +62,19 @@ chrome.runtime.onInstalled.addListener(() => {
   }
 });
 
-chrome.contextMenus.onClicked.addListener( async (item, tab) => { 
+chrome.contextMenus.onClicked.addListener( async (item, tab) => {   //remove async?
   let payload = {};
   uri = `https://coda.io/apis/v1/docs/${docID}/tables/${tabID}/rows`;
   switch (item.menuItemId) {
     case 'addVoca':
-      //createNotification('uri', uri);
-      payload = {'rows': [{'cells': [{'column': 'Name', 'value': `${item.selectionText}`},],},],};
+      payload = {'rows': [{'cells': [{'column': 'Name', 
+                                      'value': `${item.selectionText}`},],},],};
       fetch(uri, {method:'POST', headers: headers2, body: JSON.stringify(payload),})
-        .then(response => {if (response.status == '202') {
-          createNotification(item.selectionText, "vocabulary is added !");
-          createAlarm(item.selectionText, 15000);}});
+      .then(response => {if (response.status == '202') {
+                          createNotification(item.selectionText, "vocabulary is added !");
+                          createAlarm(item.selectionText, 15000);
+                        }}
+        );
       //break;
     case 'markUp':
       vocaName = item.selectionText;
@@ -72,17 +84,19 @@ chrome.contextMenus.onClicked.addListener( async (item, tab) => {
             method: 'POST', headers: headers1});
       break;    
     case 'addNotes':
-      payload = {'row': { 'cells': [{'column': 'Notes', 'value': `${item.selectionText}`},],},};
+      payload = {'row': { 'cells': [{'column': 'Notes', 
+                                     'value': `${item.selectionText}`},],},};
       fetch(uri+`/${vocaName}`, {
             method: 'PUT', headers: headers2, body: JSON.stringify(payload)
       });
       break;
-    case 'getNotes':
-      let aRow = await fetch(uri+`/${item.selectionText}`, headers1)
-                  .then(response => {return response.json()})
-                  .catch(err => {console.log(err)});
-      createNotification(item.selectionText, aRow.values['c-Y6m-B6qFzz']);
-      break;  
+    case 'getNote':
+      if (!notesID) {getNotesId();}
+      fetch(uri+`/${item.selectionText}`, headers1)
+      .then((response) => response.json())
+      .then((json) => createNotification(item.selectionText, json.values[`${notesID}`]))
+      .catch((err) => console.log(err));      
+      break; 
   }  
 });
 
